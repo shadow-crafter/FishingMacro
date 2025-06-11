@@ -20,6 +20,7 @@ pause_macro = False
 
 def on_press(key):
     global stop_macro
+    global pause_macro
 
     try:
         if key.char == '=':
@@ -46,7 +47,7 @@ def play_alarm_sound(file_path):
     except Exception as e:
         print(f"An error occured while trying to play a sound: {e}")
 
-def exclamation_detected(target_color, tolerance=35, check_length=100) -> bool:
+def exclamation_detected(target_color, tolerance=35, check_length=150) -> bool:
     global center_x, center_y
 
     try:
