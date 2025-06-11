@@ -12,7 +12,7 @@ ignore_list = ["Firefox", "Chrome", "Opera", "Brave", "Edge", "Vivaldi"] #if use
 
 target_colors = [(236, 32, 34), (248, 80, 80)] #red of fishing alert exclamation point. one is a 
 click_interval = 0.01
-alarm_threshold = 5 #how long before macro tries to get unstuck / play alarm
+alarm_threshold = 36 #how long before macro tries to get unstuck / play alarm
 
 center_x, center_y = (-1, -1) #used for mouse click location
 
