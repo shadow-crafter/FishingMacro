@@ -47,7 +47,7 @@ def play_alarm_sound(file_path):
     except Exception as e:
         print(f"An error occured while trying to play a sound: {e}")
 
-def exclamation_detected(target_color, tolerance=35, check_length=150) -> bool:
+def exclamation_detected(target_color, tolerance=30, check_length=300) -> bool:
     global center_x, center_y
 
     try:
@@ -71,19 +71,20 @@ def exclamation_detected(target_color, tolerance=35, check_length=150) -> bool:
                 print(f"Could not activate the window '{game_window.title}': {e}")
                 print("The program will attempt to screenshot anyway--it will likely not work as intended.")
 
-        center_x, center_y = game_window.left + game_window.right // 2, game_window.top + game_window.height // 2
+        center_x, center_y = game_window.left + game_window.width // 2, game_window.top + game_window.height // 2
 
-        left = min(game_window.left, center_x - (check_length // 2)) #subtract half check length since square is centered
-        top = min(game_window.top, center_y - (check_length // 2))
+        left = max(game_window.left, center_x - (check_length // 2)) #subtract half check length since square is centered
+        top = max(game_window.top, center_y - (check_length // 2))
 
         check_w, check_h = (check_length, check_length)
 
         if left + check_length > game_window.left + game_window.width: #ensure it doesn't check out of game window
             check_w = (game_window.left + game_window.width) - left
-        if top + check_length < game_window.top + game_window.height:
+        if top + check_length > game_window.top + game_window.height:
             check_h = (game_window.top + game_window.height) - top
 
         screenshot = pyautogui.screenshot(region=(left, top, check_w, check_h))
+        screenshot.save("screenshot_region.png")
 
         for x in range(screenshot.width):
             for y in range(screenshot.height):
