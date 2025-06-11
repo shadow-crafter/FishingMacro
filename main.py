@@ -2,19 +2,23 @@ import os
 import playsound #needs 1.2.2 version to install for me
 import pyautogui
 from pynput.keyboard import Listener
+import pygetwindow as gw
 import random
 import time
 
 sound_file_path = "alert.mp3"
+window_check_title = "roblox"
 
 target_colors = [(236, 32, 34), (248, 80, 80)] #red of fishing alert exclamation point
 click_interval = 0.01
 alarm_threshold = 25 #how long before macro tries to get unstuck / play alarm
 
+center_x, center_y = 0, 0 #used for mouse click location
+
 stop_macro = False
 
 def on_press(key):
-    global stop_macro #needs to be global to use
+    global stop_macro
 
     try:
         if key.char == '`':
@@ -35,27 +39,60 @@ def play_alarm_sound(file_path):
     except Exception as e:
         print(f"An error occured while trying to play a sound: {e}")
 
-def exclamation_detected(target_color, tolerance=35, check_radius=350) -> bool:
-    screen_width, screen_height = pyautogui.size()
-    center_x, center_y = screen_width // 2, screen_height // 2
+def exclamation_detected(target_color, tolerance=35, check_length=350) -> bool:
+    global center_x, center_y
 
-    left = center_x - check_radius // 2
-    top = center_y - check_radius // 2
+    try:
+        windows = gw.getAllWindows()
+        
+        game_window: gw.Window = None
+        for window in windows:
+            if window_check_title.lower() in window.title.lower(): #check for window with keyword, in this case the one for the game
+                game_window = window
+                break
+        
+        if not game_window:
+            print(f"No window with '{window_check_title}' in the title was found.")
+            return
+        
+        if not game_window.isActive:
+            try:
+                game_window.activate()
+                time.sleep(0.4) #allow time to focus window
+            except Exception as e:
+                print(f"Could not activate the window '{game_window.title}': {e}")
+                print("The program will attempt to screenshot anyway--it will likely not work as intended.")
 
-    screenshot = pyautogui.screenshot(region=(left, top, check_radius, check_radius))
+        center_x, center_y = game_window.left + game_window.right // 2, game_window.top + game_window.height // 2
 
-    for x in range(screenshot.width):
-        for y in range(screenshot.height):
-            pixel_color = screenshot.getpixel((x, y))
+        left = min(game_window.left, center_x - (check_length // 2)) #subtract half check length since square is centered
+        top = min(game_window.top, center_y - (check_length // 2))
 
-            #check if pixel color is close enough to the target
-            if abs(pixel_color[0] - target_color[0]) <= tolerance and abs(pixel_color[1] - target_color[1] <= tolerance) and abs(pixel_color[2] - target_color[2] <= tolerance):
-                print(f"Found the color {pixel_color} at ({left + x}, {top + y})")
-                return True
-    
-    return False
+        check_w, check_h = check_length
+
+        if left + check_length > game_window.left + game_window.width: #ensure it doesn't check out of game window
+            check_w = (game_window.left + game_window.width) - left
+        if top + check_length < game_window.top + game_window.height:
+            check_h = (game_window.top + game_window.height) - top
+
+        screenshot = pyautogui.screenshot(region=(left, top, check_w, check_h))
+
+        for x in range(screenshot.width):
+            for y in range(screenshot.height):
+                pixel_color = screenshot.getpixel((x, y))
+
+                #check if pixel color is close enough to the target
+                if abs(pixel_color[0] - target_color[0]) <= tolerance and abs(pixel_color[1] - target_color[1] <= tolerance) and abs(pixel_color[2] - target_color[2] <= tolerance):
+                    print(f"Found the color {pixel_color} at ({left + x}, {top + y})")
+                    return True
+        
+        return False
+    except Exception as e:
+        print(f"An error has occured: {e}")
 
 def macro():
+    global center_x, center_y
+
     last_clicked_time = 0
 
     print("Macro is starting...")
@@ -63,11 +100,11 @@ def macro():
     print("Macro started!")
     while not stop_macro:
         if exclamation_detected(target_color=target_colors[0]) or exclamation_detected(target_color=target_colors[1]):
-            pyautogui.click()
+            pyautogui.click(center_x, center_y)
             last_clicked_time = time.time()
             time.sleep(click_interval + ((random.random() * 2) / 100)) #variance for bot detection
         elif time.time() - last_clicked_time >= alarm_threshold: #attempt to get unstuck if no clicks in a while
-            pyautogui.click()
+            pyautogui.click(center_x, center_y)
             #play_alarm_sound(sound_file_path) #optionally play alarm sound too
             last_clicked_time = time.time()
 
