@@ -7,20 +7,27 @@ import random
 import time
 
 sound_file_path = "alert.mp3"
-window_check_title = "roblox"
+window_check_title = "Roblox"
 
-target_colors = [(236, 32, 34), (248, 80, 80)] #red of fishing alert exclamation point
+target_colors = [(236, 32, 34), (248, 80, 80)] #red of fishing alert exclamation point. one is a 
 click_interval = 0.01
 alarm_threshold = 25 #how long before macro tries to get unstuck / play alarm
 
 center_x, center_y = 0, 0 #used for mouse click location
 
 stop_macro = False
+pause_macro = False
 
 def on_press(key):
     global stop_macro
 
     try:
+        if key.char == '=':
+            pause_macro = not pause_macro
+            if pause_macro == True:
+                print("Macro has been paused.")
+            else:
+                print("Macro has been unpaused.")
         if key.char == '`':
             print("Stopping macro...")
             stop_macro = True
@@ -39,7 +46,7 @@ def play_alarm_sound(file_path):
     except Exception as e:
         print(f"An error occured while trying to play a sound: {e}")
 
-def exclamation_detected(target_color, tolerance=35, check_length=350) -> bool:
+def exclamation_detected(target_color, tolerance=35, check_length=100) -> bool:
     global center_x, center_y
 
     try:
@@ -68,7 +75,7 @@ def exclamation_detected(target_color, tolerance=35, check_length=350) -> bool:
         left = min(game_window.left, center_x - (check_length // 2)) #subtract half check length since square is centered
         top = min(game_window.top, center_y - (check_length // 2))
 
-        check_w, check_h = check_length
+        check_w, check_h = (check_length, check_length)
 
         if left + check_length > game_window.left + game_window.width: #ensure it doesn't check out of game window
             check_w = (game_window.left + game_window.width) - left
@@ -99,6 +106,8 @@ def macro():
     time.sleep(2) #delay starting macro
     print("Macro started!")
     while not stop_macro:
+        if pause_macro:
+            continue
         if exclamation_detected(target_color=target_colors[0]) or exclamation_detected(target_color=target_colors[1]):
             pyautogui.click(center_x, center_y)
             last_clicked_time = time.time()
