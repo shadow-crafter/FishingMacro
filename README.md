@@ -8,7 +8,7 @@ To assist in troubleshooting, the program creates a png file of the screenshot r
 
 To stop the macro, press the ` key, and pause it by pressing the = key.
 
-If you'd like to add an alert sound if the macro detects that it is stuck (which is generally caused by a lag spike), uncomment line #71 in the script.
+If you'd like to add an alert sound if the macro detects that it is stuck (which is generally caused by a lag spike), set the bool play_alarm to True.
 You can also add your own sound by either replacing the alert sound in this project, or replacing the path to the sound you want played.
 
 *Please note that using this tool unattended is against the rules of the game and you may be banned.*

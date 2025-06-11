@@ -8,15 +8,18 @@ import time
 
 sound_file_path = "alert.mp3"
 window_check_title = "Roblox"
+ignore_list = ["Firefox", "Chrome", "Opera", "Brave", "Edge", "Vivaldi"] #if user has roblox open in a browser, it can confuse the game window detection
 
 target_colors = [(236, 32, 34), (248, 80, 80)] #red of fishing alert exclamation point. one is a 
 click_interval = 0.01
-alarm_threshold = 32 #how long before macro tries to get unstuck / play alarm
+alarm_threshold = 5 #how long before macro tries to get unstuck / play alarm
 
-center_x, center_y = 0, 0 #used for mouse click location
+center_x, center_y = (-1, -1) #used for mouse click location
 
 stop_macro = False
 pause_macro = False
+
+play_alarm = True
 
 def on_press(key):
     global stop_macro
@@ -47,6 +50,12 @@ def play_alarm_sound(file_path):
     except Exception as e:
         print(f"An error occured while trying to play a sound: {e}")
 
+def ignore_list_check(title):
+    for word in ignore_list:
+        if word.lower() in title:
+            return False
+    return True
+
 def exclamation_detected(target_color, tolerance=25, check_length=350) -> bool:
     global center_x, center_y
 
@@ -55,12 +64,13 @@ def exclamation_detected(target_color, tolerance=25, check_length=350) -> bool:
         
         game_window: gw.Window = None
         for window in windows:
-            if window_check_title.lower() in window.title.lower(): #check for window with keyword, in this case the one for the game
+            if window_check_title.lower() in window.title.lower() and ignore_list_check(window.title.lower()): #check for window with keyword & not browser
                 game_window = window
                 break
         
         if not game_window:
             print(f"No window with '{window_check_title}' in the title was found.")
+            center_x, center_y = (-1, -1)
             return
         
         if not game_window.isActive:
@@ -102,7 +112,7 @@ def exclamation_detected(target_color, tolerance=25, check_length=350) -> bool:
 def macro():
     global center_x, center_y
 
-    last_clicked_time = 0
+    last_clicked_time = time.time()
 
     print("Macro is starting...")
     time.sleep(2) #delay starting macro
@@ -114,9 +124,10 @@ def macro():
             pyautogui.click(center_x, center_y)
             last_clicked_time = time.time()
             time.sleep(click_interval + ((random.random() * 2) / 100)) #variance for bot detection
-        elif time.time() - last_clicked_time >= alarm_threshold: #attempt to get unstuck if no clicks in a while
+        elif time.time() - last_clicked_time >= alarm_threshold and center_x != -1 and center_y != -1: #attempt to get unstuck if no clicks in a while
             pyautogui.click(center_x, center_y)
-            #play_alarm_sound(sound_file_path) #optionally play alarm sound too
+            if play_alarm:
+                play_alarm_sound(sound_file_path) #optionally play alarm sound too
             last_clicked_time = time.time()
 
 if __name__ == "__main__":
