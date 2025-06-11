@@ -1,1 +1,13 @@
-###
+# Fishing Macro
+
+Made for use in the game [Arcane Odyssey](https://www.roblox.com/games/3272915504/Arcane-Odyssey-Early-Access) on Roblox.
+
+To use, pip install all the libraries and run it.
+The program detects red pixels in the center of screen, so make sure to position your camera in the correct place, and avoid being near anything red. Tolerance and radius may need to be adjusted.
+
+To stop the macro, press the ` key.
+
+If you'd like to add an alert sound if the macro detects that it is stuck (which is generally caused by a lag spike), uncomment line #71 in the script.
+You can also add your own sound by either replacing the alert sound in this project, or replacing the path to the sound you want played.
+
+*Please note that using this tool unattended is against the rules of the game and you may be banned.*
