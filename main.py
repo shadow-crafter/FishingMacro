@@ -11,7 +11,7 @@ window_check_title = "Roblox"
 
 target_colors = [(236, 32, 34), (248, 80, 80)] #red of fishing alert exclamation point. one is a 
 click_interval = 0.01
-alarm_threshold = 25 #how long before macro tries to get unstuck / play alarm
+alarm_threshold = 32 #how long before macro tries to get unstuck / play alarm
 
 center_x, center_y = 0, 0 #used for mouse click location
 
@@ -47,7 +47,7 @@ def play_alarm_sound(file_path):
     except Exception as e:
         print(f"An error occured while trying to play a sound: {e}")
 
-def exclamation_detected(target_color, tolerance=30, check_length=300) -> bool:
+def exclamation_detected(target_color, tolerance=25, check_length=350) -> bool:
     global center_x, center_y
 
     try:
