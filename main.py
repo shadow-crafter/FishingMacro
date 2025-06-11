@@ -1,11 +1,15 @@
+import os
 import playsound #needs 1.2.2 version to install for me
 import pyautogui
 from pynput.keyboard import Listener
 import random
 import time
 
+sound_file_path = "alert.mp3"
+
 target_colors = [(236, 32, 34), (248, 80, 80)] #red of fishing alert exclamation point
-click_interval = 0.05
+click_interval = 0.01
+alarm_threshold = 25 #how long before macro tries to get unstuck / play alarm
 
 stop_macro = False
 
@@ -21,8 +25,15 @@ def on_press(key):
     except AttributeError:
         pass #do nothing, only catches exception if it's a special key like f1 or shift
 
-def play_sound(file_path):
-    pass
+def play_alarm_sound(file_path):
+    if not os.path.exists(file_path):
+        print(f"The file at '{file_path}' does not exist.")
+        return
+    
+    try:
+        playsound.playsound(file_path)
+    except Exception as e:
+        print(f"An error occured while trying to play a sound: {e}")
 
 def exclamation_detected(target_color, tolerance=35, check_radius=350) -> bool:
     screen_width, screen_height = pyautogui.size()
@@ -45,21 +56,20 @@ def exclamation_detected(target_color, tolerance=35, check_radius=350) -> bool:
     return False
 
 def macro():
+    last_clicked_time = 0
+
     print("Macro is starting...")
     time.sleep(2) #delay starting macro
     print("Macro started!")
     while not stop_macro:
-        """if exclamation_detected(target_color=target_colors[0]) or exclamation_detected(target_color=target_colors[1]):
-            while not stop_macro: #was a "while true", but changed as extra precaution to make sure macro ends when you want it to
-                pyautogui.click()
-                time.sleep(click_interval + ((random.random() * 2) / 100)) #variance for bot detection
-                if not exclamation_detected(target_color=target_colors[0]) and not exclamation_detected(target_color=target_colors[1]):
-                    break
-            time.sleep(2)
-            pyautogui.click()"""
         if exclamation_detected(target_color=target_colors[0]) or exclamation_detected(target_color=target_colors[1]):
             pyautogui.click()
+            last_clicked_time = time.time()
             time.sleep(click_interval + ((random.random() * 2) / 100)) #variance for bot detection
+        elif time.time() - last_clicked_time >= alarm_threshold: #attempt to get unstuck if no clicks in a while
+            pyautogui.click()
+            #play_alarm_sound(sound_file_path) #optionally play alarm sound too
+            last_clicked_time = time.time()
 
 if __name__ == "__main__":
     with Listener(on_press=on_press) as listener: #creates thread to run on_press alongside macro
