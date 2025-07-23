@@ -1,3 +1,5 @@
+import cv2
+import numpy as np
 import os
 import playsound #needs 1.2.2 version to install for me
 import pyautogui
@@ -35,8 +37,6 @@ def on_press(key):
         if key.char == '`':
             print("Stopping macro...")
             stop_macro = True
-
-            return False #end listener thread
     except AttributeError:
         pass #do nothing, only catches exception if it's a special key like f1 or shift
 
@@ -62,7 +62,7 @@ def exclamation_detected(target_color, tolerance=25, check_length=350) -> bool:
     try:
         windows = gw.getAllWindows()
         
-        game_window: gw.Window = None
+        game_window = None
         for window in windows:
             if window_check_title.lower() in window.title.lower() and ignore_list_check(window.title.lower()): #check for window with keyword & not browser
                 game_window = window
@@ -71,7 +71,7 @@ def exclamation_detected(target_color, tolerance=25, check_length=350) -> bool:
         if not game_window:
             print(f"No window with '{window_check_title}' in the title was found.")
             center_x, center_y = (-1, -1)
-            return
+            return False
         
         if not game_window.isActive:
             try:
@@ -108,6 +108,8 @@ def exclamation_detected(target_color, tolerance=25, check_length=350) -> bool:
         return False
     except Exception as e:
         print(f"An error has occured: {e}")
+    
+    return False
 
 def macro():
     global center_x, center_y
