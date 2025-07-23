@@ -13,7 +13,7 @@ sound_file_path = "alert.mp3"
 window_check_title = "Roblox"
 ignore_list = ["Firefox", "Chrome", "Opera", "Brave", "Edge", "Vivaldi"] #if user has roblox open in a browser, it can confuse the game window detection
 
-text_checks = ("Fish Caught", "Treasure Caught")
+text_checks = ("Fish Caught", "Fish Cought", "Treasure Caught", "Treasure Cought") #the "a" gets detected wrong commonly
 target_colors = [(236, 32, 34), (248, 80, 80)] #red of fishing alert exclamation point. one is a 
 click_interval = 0.01
 alarm_threshold = 45 #how long before macro tries to get unstuck / play alarm
@@ -170,7 +170,7 @@ def macro():
     while not stop_macro:
         if pause_macro:
             continue
-        if detected_image("ref_imgs/exclamation.jpg", 0.7):
+        if detected_image("ref_imgs/exclamation.jpg", 0.7) and time.time() - last_clicked_time >= 1:
             while not found_text_in_image(text_checks) and not stop_macro:
                 pyautogui.click(center_x, center_y)
                 last_clicked_time = time.time()
