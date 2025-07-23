@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import os
-import playsound #needs 1.2.2 version to install for me
+import playsound
 import pyautogui
 from pynput.keyboard import Listener
 import pygetwindow as gw
