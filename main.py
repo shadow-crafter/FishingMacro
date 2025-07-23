@@ -96,6 +96,28 @@ def exclamation_detected(target_color, tolerance=25, check_length=350) -> bool:
         screenshot = pyautogui.screenshot(region=(left, top, check_w, check_h))
         screenshot.save("screenshot_region.png")
 
+        screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
+
+        ref = cv2.imread("ref_imgs/exclamation.jpg")
+        if ref is None:
+            raise Exception("Reference image not found. Please ensure 'ref_imgs/exclamation.jpg' exists.")
+        
+        ref_height, ref_width = ref.shape[:2]
+
+        result = cv2.matchTemplate(screenshot, ref, cv2.TM_CCOEFF_NORMED)
+
+        threshold = 0.8
+        yloc, xloc = np.where(result >= threshold)
+
+        for (x, y) in zip(xloc, yloc):
+            cv2.rectangle(screenshot, (x, y), (x + ref_width, y + ref_height), (0, 255, 0), 2)
+        
+        cv2.imshow("Detected Exclamation", screenshot)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+
+        """
         for x in range(screenshot.width):
             for y in range(screenshot.height):
                 pixel_color = screenshot.getpixel((x, y))
@@ -104,12 +126,12 @@ def exclamation_detected(target_color, tolerance=25, check_length=350) -> bool:
                 if abs(pixel_color[0] - target_color[0]) <= tolerance and abs(pixel_color[1] - target_color[1] <= tolerance) and abs(pixel_color[2] - target_color[2] <= tolerance):
                     print(f"Found the color {pixel_color} at ({left + x}, {top + y})")
                     return True
-        
+        """
+
         return False
     except Exception as e:
         print(f"An error has occured: {e}")
-    
-    return False
+        return False
 
 def macro():
     global center_x, center_y
