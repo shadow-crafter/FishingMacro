@@ -7,23 +7,26 @@ from pynput.keyboard import Listener
 import pygetwindow as gw
 import pytesseract as tess
 import random
+import re
 import time
 
 sound_file_path = "alert.mp3"
 window_check_title = "Roblox"
 ignore_list = ["Firefox", "Chrome", "Opera", "Brave", "Edge", "Vivaldi"] #if user has roblox open in a browser, it can confuse the game window detection
 
-text_checks = ("Fish Caught", "Fish Cought", "Treasure Caught", "Treasure Cought") #the "a" gets detected wrong commonly
+text_checks = ("Caught", "Cought") #the "a" gets detected wrong commonly
 target_colors = [(236, 32, 34), (248, 80, 80)] #red of fishing alert exclamation point. one is a 
 click_interval = 0.01
 alarm_threshold = 45 #how long before macro tries to get unstuck / play alarm
 
 center_x, center_y = (-1, -1) #used for mouse click location
 
+play_alarm = True
+debug_windows = True # shows windows of where the program is looking for an image or text. Only reccomended for testing since this decreases performance
+
 stop_macro = False
 pause_macro = False
 
-play_alarm = True
 
 def on_press(key):
     global stop_macro
@@ -126,8 +129,10 @@ def detected_image(ref_path: str, threshold: float) -> bool:
 
         for (x, y) in zip(xloc, yloc):
             cv2.rectangle(screenshot, (x, y), (x + ref_width, y + ref_height), (0, 255, 0), 2)
-        cv2.imshow("Detected image", screenshot)
-        cv2.waitKey(1)
+        
+        if debug_windows:
+            cv2.imshow("Detected image", screenshot)
+            cv2.waitKey(1)
 
         if yloc.size > 0 or xloc.size > 0:
             return True
@@ -148,10 +153,12 @@ def found_text_in_image(text_checks: tuple) -> bool:
         screenshot = screenshot[:, screenshot.shape[:2][1] // 2:]
 
         extracted_text = tess.image_to_string(screenshot)
-        #print(f"Extracted text: {extracted_text.strip()}")
+        extracted_text = extracted_text.lower()
+        extracted_text = re.sub(r'[^a-zA-Z0-9]', ' ', extracted_text) # remove special characters that sometimes artifact
+        print(f"Extracted text: {extracted_text.strip()}")
 
         for text_check in text_checks:
-            if text_check.lower() in extracted_text.lower():
+            if text_check.lower() in extracted_text:
                 return True
         
         return False
