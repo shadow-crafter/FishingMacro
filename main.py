@@ -37,6 +37,7 @@ def on_press(key):
         if key.char == '`':
             print("Stopping macro...")
             stop_macro = True
+            return False
     except AttributeError:
         pass #do nothing, only catches exception if it's a special key like f1 or shift
 
@@ -56,7 +57,7 @@ def ignore_list_check(title):
             return False
     return True
 
-def exclamation_detected(target_color, tolerance=25, check_length=350) -> bool:
+def exclamation_detected(target_color, tolerance=25, check_length=500) -> bool:
     global center_x, center_y
 
     try:
@@ -106,17 +107,18 @@ def exclamation_detected(target_color, tolerance=25, check_length=350) -> bool:
 
         result = cv2.matchTemplate(screenshot, ref, cv2.TM_CCOEFF_NORMED)
 
-        threshold = 0.8
+        threshold = 0.6
         yloc, xloc = np.where(result >= threshold)
 
         for (x, y) in zip(xloc, yloc):
             cv2.rectangle(screenshot, (x, y), (x + ref_width, y + ref_height), (0, 255, 0), 2)
-        
+        print(yloc, xloc)
         cv2.imshow("Detected Exclamation", screenshot)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        cv2.waitKey(1)
 
-
+        if yloc.size > 0 or xloc.size > 0:
+            return True
+        
         """
         for x in range(screenshot.width):
             for y in range(screenshot.height):
@@ -159,4 +161,5 @@ if __name__ == "__main__":
         macro()
 
         listener.join() #joins thread to make sure program closes correctly
+    cv2.destroyAllWindows()
     print("Macro ended successfully.")
