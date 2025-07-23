@@ -57,49 +57,59 @@ def ignore_list_check(title):
             return False
     return True
 
-def exclamation_detected(target_color, tolerance=25, check_length=500) -> bool:
+def get_window_screenshot(check_length=500):
+    global center_x, center_y
+
+    windows = gw.getAllWindows()
+        
+    game_window = None
+    for window in windows:
+        if window_check_title.lower() in window.title.lower() and ignore_list_check(window.title.lower()): #check for window with keyword & not browser
+            game_window = window
+            break
+    
+    if not game_window:
+        print(f"No window with '{window_check_title}' in the title was found.")
+        center_x, center_y = (-1, -1)
+        return None
+        
+    if not game_window.isActive:
+        try:
+            game_window.activate()
+            time.sleep(0.4) #allow time to focus window
+        except Exception as e:
+            print(f"Could not activate the window '{game_window.title}': {e}")
+            print("The program will attempt to screenshot anyway--it will likely not work as intended.")
+
+    center_x, center_y = game_window.left + game_window.width // 2, game_window.top + game_window.height // 2
+
+    left = max(game_window.left, center_x - (check_length // 2)) #subtract half check length since square is centered
+    top = max(game_window.top, center_y - (check_length // 2))
+
+    check_w, check_h = (check_length, check_length)
+
+    if left + check_length > game_window.left + game_window.width: #ensure it doesn't check out of game window
+        check_w = (game_window.left + game_window.width) - left
+    if top + check_length > game_window.top + game_window.height:
+        check_h = (game_window.top + game_window.height) - top
+
+    #screenshot = pyautogui.screenshot(region=(left, top, check_w, check_h))
+    screenshot = pyautogui.screenshot(region=(game_window.left, game_window.top, game_window.width, game_window.height))
+    screenshot.save("screenshot_region.png")
+
+    return screenshot
+
+def detected_image(ref_path: str, threshold: float) -> bool:
     global center_x, center_y
 
     try:
-        windows = gw.getAllWindows()
-        
-        game_window = None
-        for window in windows:
-            if window_check_title.lower() in window.title.lower() and ignore_list_check(window.title.lower()): #check for window with keyword & not browser
-                game_window = window
-                break
-        
-        if not game_window:
-            print(f"No window with '{window_check_title}' in the title was found.")
-            center_x, center_y = (-1, -1)
+        screenshot = get_window_screenshot()
+        if screenshot is None:
             return False
         
-        if not game_window.isActive:
-            try:
-                game_window.activate()
-                time.sleep(0.4) #allow time to focus window
-            except Exception as e:
-                print(f"Could not activate the window '{game_window.title}': {e}")
-                print("The program will attempt to screenshot anyway--it will likely not work as intended.")
-
-        center_x, center_y = game_window.left + game_window.width // 2, game_window.top + game_window.height // 2
-
-        left = max(game_window.left, center_x - (check_length // 2)) #subtract half check length since square is centered
-        top = max(game_window.top, center_y - (check_length // 2))
-
-        check_w, check_h = (check_length, check_length)
-
-        if left + check_length > game_window.left + game_window.width: #ensure it doesn't check out of game window
-            check_w = (game_window.left + game_window.width) - left
-        if top + check_length > game_window.top + game_window.height:
-            check_h = (game_window.top + game_window.height) - top
-
-        screenshot = pyautogui.screenshot(region=(left, top, check_w, check_h))
-        screenshot.save("screenshot_region.png")
-
         screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
 
-        ref = cv2.imread("ref_imgs/exclamation.jpg")
+        ref = cv2.imread(ref_path)
         if ref is None:
             raise Exception("Reference image not found. Please ensure 'ref_imgs/exclamation.jpg' exists.")
         
@@ -107,28 +117,15 @@ def exclamation_detected(target_color, tolerance=25, check_length=500) -> bool:
 
         result = cv2.matchTemplate(screenshot, ref, cv2.TM_CCOEFF_NORMED)
 
-        threshold = 0.6
         yloc, xloc = np.where(result >= threshold)
 
         for (x, y) in zip(xloc, yloc):
             cv2.rectangle(screenshot, (x, y), (x + ref_width, y + ref_height), (0, 255, 0), 2)
-        print(yloc, xloc)
-        cv2.imshow("Detected Exclamation", screenshot)
+        cv2.imshow("Detected image", screenshot)
         cv2.waitKey(1)
 
         if yloc.size > 0 or xloc.size > 0:
             return True
-        
-        """
-        for x in range(screenshot.width):
-            for y in range(screenshot.height):
-                pixel_color = screenshot.getpixel((x, y))
-
-                #check if pixel color is close enough to the target
-                if abs(pixel_color[0] - target_color[0]) <= tolerance and abs(pixel_color[1] - target_color[1] <= tolerance) and abs(pixel_color[2] - target_color[2] <= tolerance):
-                    print(f"Found the color {pixel_color} at ({left + x}, {top + y})")
-                    return True
-        """
 
         return False
     except Exception as e:
@@ -146,10 +143,11 @@ def macro():
     while not stop_macro:
         if pause_macro:
             continue
-        if exclamation_detected(target_color=target_colors[0]) or exclamation_detected(target_color=target_colors[1]):
-            pyautogui.click(center_x, center_y)
-            last_clicked_time = time.time()
-            time.sleep(click_interval + ((random.random() * 2) / 100)) #variance for bot detection
+        if detected_image("ref_imgs/exclamation.jpg", 0.5):
+            while not detected_image("ref_imgs/fish_caught.jpg", 0.45) and not detected_image("ref_imgs/treasure_caught.jpg", 0.45) and not stop_macro:
+                pyautogui.click(center_x, center_y)
+                last_clicked_time = time.time()
+                time.sleep(click_interval + (random.random() / 1000)) #variance for bot detection
         elif time.time() - last_clicked_time >= alarm_threshold and center_x != -1 and center_y != -1: #attempt to get unstuck if no clicks in a while
             pyautogui.click(center_x, center_y)
             if play_alarm:
