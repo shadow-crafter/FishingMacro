@@ -4,18 +4,14 @@ import pyautogui
 import pygetwindow as gw
 import pytesseract as tess
 import re
+from src.settings import debug_windows, ignore_list, window_check_title
 from src.util import ignore_list_check
 import time
 
-window_check_title = "Roblox"
-ignore_list = ["Firefox", "Chrome", "Opera", "Brave", "Edge", "Vivaldi"] #if user has roblox open in a browser, it can confuse the game window detection
 
 text_checks = ("Caught", "Cought") #the "a" gets detected wrong commonly
 target_colors1 = {"lower": np.array([0, 100, 100]), "higher": np.array([10, 255, 255])}
 target_colors2 = {"lower": np.array([160, 100, 100]), "higher": np.array([180, 255, 255])}
-
-contour_area_threshold = 70 #how many pixels need to be detected to trigger fishing
-debug_windows = True # shows windows of where the program is looking for an image or text. Only reccomended for testing since this decreases performance
 
 def get_window_screenshot(check_length):
     global center_x, center_y

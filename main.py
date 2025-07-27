@@ -1,18 +1,13 @@
 from pynput.keyboard import Listener
 import random
 from src.processing import *
+from src.settings import alarm_threshold, click_interval, contour_area_threshold, play_alarm
 from src.util import play_alarm_sound
 import time
 
-sound_file_path = "alert.mp3"
-
-click_interval = 0.01
-alarm_threshold = 45 #how long before macro tries to get unstuck / play alarm
+sound_file_path = "sounds/alert.mp3"
 
 center_x, center_y = (-1, -1) #used for mouse click location
-
-play_alarm = True
-
 stop_macro = False
 pause_macro = False
 
