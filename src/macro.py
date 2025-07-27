@@ -1,4 +1,4 @@
-from pynput.keyboard import Listener
+from pynput.keyboard import Controller, Listener
 import random
 from src.processing import *
 from src.settings import *
@@ -27,9 +27,12 @@ States:
 sound_file_path = "sounds/alert.mp3"
 exclamation_wait_time = 3
 fishing_wait_time = 15 #how long program will try to fish for
+key_press_delay = 0.01
+key_press_interval = 0.25
 
 class Macro:
     current_macro_state = None
+    pyn_keyboard = Controller()
 
     center_x, center_y = (-1, -1) #used for mouse click location
     last_clicked_time = time.time()
@@ -56,6 +59,13 @@ class Macro:
         cls.last_clicked_time = time.time()
         time.sleep(click_interval + (random.random() / 1000)) #variance for bot detection
 
+    @classmethod
+    def press_key(cls, key):
+        cls.pyn_keyboard.press(key)
+        time.sleep(key_press_delay)
+        cls.pyn_keyboard.release(key)
+        time.sleep(key_press_interval)
+    
     class MacroState:
         def execute(self):
             raise NotImplementedError("This method is ment to be overridden!")
@@ -90,15 +100,26 @@ class Macro:
 
     class StuckMode(MacroState):
         def execute(self):
-            pass
+            if play_alarm:
+                play_alarm_sound(sound_file_path)
+            
+            Macro.press_key(rod_equip_keybind)
+            Macro.press_key(rod_equip_keybind)
+
+            return Macro.EvaluatingMode()
 
     class EatingMode(MacroState):
         def execute(self):
-            pass
+            Macro.press_key(food_equip_keybind)
+            Macro.click()
+            time.sleep(0.3) #give extra time for eating to process
+            Macro.press_key(rod_equip_keybind)
+
+            return Macro.EvaluatingMode()
 
     class PausedMode(MacroState):
         def execute(self):
-            pass
+            pass #do nothing when paused
 
     class ExitMode(MacroState):
         def execute(self):
@@ -117,3 +138,6 @@ class Macro:
 
         while self.current_macro_state is not None:
             self.current_macro_state = self.current_macro_state.execute()
+        
+        cv2.destroyAllWindows()
+        print("Macro ended successfully.")
