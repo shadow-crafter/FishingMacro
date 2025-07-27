@@ -29,6 +29,7 @@ exclamation_wait_time = 3
 fishing_wait_time = 15 #how long program will try to fish for
 key_press_delay = 0.01
 key_press_interval = 0.25
+click_interval = 0.01
 
 class Macro:
     current_macro_state = None

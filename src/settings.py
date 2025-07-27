@@ -10,7 +10,6 @@ contour_area_threshold = int(config.get("Settings", "contour_area_threshold"))
 
 debug_windows = bool(config.get("Settings", "debug_windows"))
 play_alarm = bool(config.get("Settings", "play_alarm"))
-click_interval = float(config.get("Settings", "click_interval"))
 
 alarm_time = int(config.get("Settings", "alarm_time"))
 eat_time = int(config.get("Settings", "eattime"))
