@@ -15,7 +15,9 @@ window_check_title = "Roblox"
 ignore_list = ["Firefox", "Chrome", "Opera", "Brave", "Edge", "Vivaldi"] #if user has roblox open in a browser, it can confuse the game window detection
 
 text_checks = ("Caught", "Cought") #the "a" gets detected wrong commonly
-target_colors = {"lower": np.array([236, 32, 34]), "higher": np.array([248, 80, 80])}
+#target_colors = {"lower": np.array([236, 32, 34]), "higher": np.array([248, 80, 80])}
+target_colors1 = {"lower": np.array([0, 100, 100]), "higher": np.array([10, 255, 255])}
+target_colors2 = {"lower": np.array([160, 100, 100]), "higher": np.array([180, 255, 255])}
 click_interval = 0.01
 alarm_threshold = 45 #how long before macro tries to get unstuck / play alarm
 
@@ -108,7 +110,7 @@ def get_window_screenshot(check_length):
 
 def detect_exclamation(contour_check_area: int) -> bool:
     try:
-        screenshot = get_window_screenshot(800)
+        screenshot = get_window_screenshot(500)
         if screenshot is None:
             return False
         
@@ -116,12 +118,15 @@ def detect_exclamation(contour_check_area: int) -> bool:
         screenshot = cv2.cvtColor(screenshot, cv2.COLOR_BGR2HSV) #convert to hsv
         screenshot = cv2.resize(screenshot, (0, 0), fx=0.5, fy=0.5)
 
-        mask = cv2.inRange(screenshot, target_colors["lower"], target_colors["higher"])
+        mask1 = cv2.inRange(screenshot, target_colors1["lower"], target_colors1["higher"])
+        mask2 = cv2.inRange(screenshot, target_colors2["lower"], target_colors2["higher"])
+        mask = cv2.bitwise_or(mask1, mask2)
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
         found = False
         for contour in contours:
             area = cv2.contourArea(contour)
+            print(area)
             if area > contour_check_area:
                 x, y, w, h = cv2.boundingRect(contour)
 
