@@ -134,8 +134,9 @@ def detect_exclamation(contour_check_area: int) -> bool:
 
                 found = True
         
-        cv2.imshow("Detected Exclamation Point", screenshot)
-        cv2.waitKey(1)
+        if debug_windows:
+            cv2.imshow("Detected Exclamation Point", screenshot)
+            cv2.waitKey(1)
 
         return found
     except Exception as e:
@@ -149,8 +150,12 @@ def found_text_in_image(text_checks: tuple) -> bool:
             return False
         
         screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2GRAY)
-        screenshot = cv2.resize(screenshot, (0, 0), fx=0.8, fy=0.8)
-        screenshot = screenshot[:, screenshot.shape[:2][1] // 2:]
+        h, w = screenshot.shape
+        screenshot = screenshot[h // 2:h, round(w // 1.5):w]
+        
+        if debug_windows:
+            cv2.imshow("Detected Text Area", screenshot)
+            cv2.waitKey(1)
 
         extracted_text = tess.image_to_string(screenshot)
         extracted_text = extracted_text.lower()
@@ -177,7 +182,7 @@ def macro():
     while not stop_macro:
         if pause_macro:
             continue
-        if detect_exclamation(100) and time.time() - last_clicked_time >= 1:
+        if detect_exclamation(70) and time.time() - last_clicked_time >= 1:
             while not found_text_in_image(text_checks) and not stop_macro:
                 pyautogui.click(center_x, center_y)
                 last_clicked_time = time.time()
