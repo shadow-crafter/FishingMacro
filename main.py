@@ -15,7 +15,7 @@ window_check_title = "Roblox"
 ignore_list = ["Firefox", "Chrome", "Opera", "Brave", "Edge", "Vivaldi"] #if user has roblox open in a browser, it can confuse the game window detection
 
 text_checks = ("Caught", "Cought") #the "a" gets detected wrong commonly
-target_colors = [(236, 32, 34), (248, 80, 80)] #red of fishing alert exclamation point. one is a 
+target_colors = {"lower": np.array([236, 32, 34]), "higher": np.array([248, 80, 80])}
 click_interval = 0.01
 alarm_threshold = 45 #how long before macro tries to get unstuck / play alarm
 
@@ -26,7 +26,6 @@ debug_windows = True # shows windows of where the program is looking for an imag
 
 stop_macro = False
 pause_macro = False
-
 
 def on_press(key):
     global stop_macro
@@ -46,7 +45,7 @@ def on_press(key):
     except AttributeError:
         pass #do nothing, only catches exception if it's a special key like f1 or shift
 
-def play_alarm_sound(file_path):
+def play_alarm_sound(file_path: str) -> None:
     if not os.path.exists(file_path):
         print(f"The file at '{file_path}' does not exist.")
         return
@@ -56,7 +55,7 @@ def play_alarm_sound(file_path):
     except Exception as e:
         print(f"An error occured while trying to play a sound: {e}")
 
-def ignore_list_check(title):
+def ignore_list_check(title: str) -> bool:
     for word in ignore_list:
         if word.lower() in title:
             return False
@@ -107,37 +106,33 @@ def get_window_screenshot(check_length):
 
     return screenshot
 
-def detected_image(ref_path: str, threshold: float) -> bool:
+def detect_exclamation(contour_check_area: int) -> bool:
     try:
         screenshot = get_window_screenshot(800)
         if screenshot is None:
             return False
         
-        screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2GRAY)
+        screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
+        screenshot = cv2.cvtColor(screenshot, cv2.COLOR_BGR2HSV) #convert to hsv
         screenshot = cv2.resize(screenshot, (0, 0), fx=0.5, fy=0.5)
 
-        ref = cv2.imread(ref_path, cv2.IMREAD_GRAYSCALE)
-        if ref is None:
-            raise Exception("Reference image not found. Please ensure 'ref_imgs/exclamation.jpg' exists.")
+        mask = cv2.inRange(screenshot, target_colors["lower"], target_colors["higher"])
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
-        ref = cv2.resize(ref, (0, 0), fx=0.5, fy=0.5)
+        found = False
+        for contour in contours:
+            area = cv2.contourArea(contour)
+            if area > contour_check_area:
+                x, y, w, h = cv2.boundingRect(contour)
 
-        ref_height, ref_width = ref.shape[:2]
+                cv2.rectangle(screenshot, (x,y), (x+w, y+h), (0, 0, 255), 2)
 
-        result = cv2.matchTemplate(screenshot, ref, cv2.TM_CCOEFF_NORMED)
-        yloc, xloc = np.where(result >= threshold)
-
-        for (x, y) in zip(xloc, yloc):
-            cv2.rectangle(screenshot, (x, y), (x + ref_width, y + ref_height), (0, 255, 0), 2)
+                found = True
         
-        if debug_windows:
-            cv2.imshow("Detected image", screenshot)
-            cv2.waitKey(1)
+        cv2.imshow("Detected Exclamation Point", screenshot)
+        cv2.waitKey(1)
 
-        if yloc.size > 0 or xloc.size > 0:
-            return True
-
-        return False
+        return found
     except Exception as e:
         print(f"An error has occured: {e}")
         return False
@@ -177,7 +172,7 @@ def macro():
     while not stop_macro:
         if pause_macro:
             continue
-        if detected_image("ref_imgs/exclamation.jpg", 0.7) and time.time() - last_clicked_time >= 1:
+        if detect_exclamation(100) and time.time() - last_clicked_time >= 1:
             while not found_text_in_image(text_checks) and not stop_macro:
                 pyautogui.click(center_x, center_y)
                 last_clicked_time = time.time()
