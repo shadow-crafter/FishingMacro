@@ -93,7 +93,7 @@ def detect_exclamation(contour_check_area: int) -> bool:
         print(f"An error has occured: {e}")
         return False
 
-def found_text_in_image(text_checks: tuple) -> bool:
+def found_text_in_image() -> bool:
     try:
         screenshot = get_window_screenshot(0)
         if screenshot is None:

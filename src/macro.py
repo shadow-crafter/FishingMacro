@@ -20,14 +20,20 @@ States:
     -> if enough time passes, enters 4
 4-Stuck mode. Plays alarm sound when entered if enabled, and re-equips rod before returning to 1.
 5-Eating mode. makes the player eat based on pre-defined button, then returns to 1.
-
+6-Paused mode. Must be exited manually.
+7.Exit mode. Ends macro.
 """
 
+sound_file_path = "sounds/alert.mp3"
+exclamation_wait_time = 3
+fishing_wait_time = 15 #how long program will try to fish for
+
 class Macro:
-    sound_file_path = "sounds/alert.mp3"
+    current_macro_state = None
 
     center_x, center_y = (-1, -1) #used for mouse click location
-    current_macro_state = None
+    last_clicked_time = time.time()
+    eatting_timer = time.time()
 
     def on_press(self, key):
         try:
@@ -43,6 +49,12 @@ class Macro:
                 current_macro_state = self.ExitMode()
         except AttributeError:
             pass #do nothing, only catches exception if it's a special key like f1 or shift
+    
+    @classmethod
+    def click(cls):
+        pyautogui.click(center_x, center_y)
+        cls.last_clicked_time = time.time()
+        time.sleep(click_interval + (random.random() / 1000)) #variance for bot detection
 
     class MacroState:
         def execute(self):
@@ -50,15 +62,31 @@ class Macro:
 
     class EvaluatingMode(MacroState):
         def execute(self):
-            pass
+            if time.time() - Macro.eatting_timer >= eat_time:
+                return Macro.EatingMode()
+            else:
+                time.sleep(0.3) #delay after caught
+                Macro.click()
+                return Macro.SearchingMode()
 
     class SearchingMode(MacroState):
         def execute(self):
-            pass
+            while time.time() - Macro.last_clicked_time < alarm_time:
+                if detect_exclamation(contour_area_threshold) and time.time() - Macro.last_clicked_time >= exclamation_wait_time: #sometimes exclamation lingers
+                    return Macro.FishingMode()
+
+            return Macro.StuckMode()
 
     class FishingMode(MacroState):
         def execute(self):
-            pass
+            fishing_timer = time.time()
+            while time.time() - fishing_timer < fishing_wait_time:
+                if found_text_in_image():
+                    return Macro.EvaluatingMode()
+                
+                Macro.click()
+            
+            return Macro.StuckMode()
 
     class StuckMode(MacroState):
         def execute(self):
