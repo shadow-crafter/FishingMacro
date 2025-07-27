@@ -8,14 +8,13 @@ from src.settings import debug_windows, ignore_list, window_check_title
 from src.util import ignore_list_check
 import time
 
-
 text_checks = ("Caught", "Cought") #the "a" gets detected wrong commonly
 target_colors1 = {"lower": np.array([0, 100, 100]), "higher": np.array([10, 255, 255])}
 target_colors2 = {"lower": np.array([160, 100, 100]), "higher": np.array([180, 255, 255])}
 
-def get_window_screenshot(check_length):
-    global center_x, center_y
+center_x, center_y = (-1, -1)
 
+def get_game_window():
     windows = gw.getAllWindows()
         
     game_window = None
@@ -26,7 +25,6 @@ def get_window_screenshot(check_length):
     
     if not game_window:
         print(f"No window with '{window_check_title}' in the title was found.")
-        center_x, center_y = (-1, -1)
         return None
         
     if not game_window.isActive:
@@ -36,9 +34,20 @@ def get_window_screenshot(check_length):
         except Exception as e:
             print(f"Could not activate the window '{game_window.title}': {e}")
             print("The program will attempt to screenshot anyway--it will likely not work as intended.")
+    
+    return game_window
+
+def get_game_window_center(game_window) -> tuple:
+    return (game_window.left + game_window.width // 2, game_window.top + game_window.height // 2)
+
+def get_window_screenshot(check_length):
+    game_window = get_game_window()
+    if game_window is None:
+        return None
 
     if check_length != 0:
-        center_x, center_y = game_window.left + game_window.width // 2, game_window.top + game_window.height // 2
+        global center_x, center_y
+        center_x, center_y = get_game_window_center(game_window)
 
         left = max(game_window.left, center_x - (check_length // 2)) #subtract half check length since square is centered
         top = max(game_window.top, center_y - (check_length // 2))

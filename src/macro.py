@@ -1,3 +1,4 @@
+import keyboard
 from pynput.keyboard import Controller, Listener
 import random
 from src.processing import *
@@ -34,38 +35,49 @@ click_interval = 0.01
 class Macro:
     current_macro_state = None
     pyn_keyboard = Controller()
-
-    center_x, center_y = (-1, -1) #used for mouse click location
+    
     last_clicked_time = time.time()
     eatting_timer = time.time()
 
-    def on_press(self, key):
-        try:
-            if key.char == pause_keybind:
-                if self.current_macro_state != self.PausedMode:
-                    self.current_macro_state = self.PausedMode()
-                    print("Macro has been paused.")
-                else:
-                    self.current_macro_state = self.StuckMode() #automatically assume stuck, so restart
-                    print("Macro has been unpaused.")
-            if key.char == stop_keybind:
-                print("Stopping macro...")
-                self.current_macro_state = self.ExitMode()
-        except AttributeError:
-            pass #do nothing, only catches exception if it's a special key like f1 or shift
+    def key_checks(self):
+        if keyboard.is_pressed(pause_keybind):
+            if not isinstance(self.current_macro_state, self.PausedMode):
+                self.current_macro_state = self.PausedMode()
+                print("Macro has been paused.")
+            else:
+                self.current_macro_state = self.StuckMode()
+            time.sleep(0.2) #db
+        elif keyboard.is_pressed(stop_keybind):
+            print("Stopping macro...")
+            self.current_macro_state = self.ExitMode()
+            time.sleep(0.2) #db
     
     @classmethod
     def click(cls):
-        pyautogui.click(center_x, center_y)
-        cls.last_clicked_time = time.time()
-        time.sleep(click_interval + (random.random() / 1000)) #variance for bot detection
+        try:
+            pyautogui.click(center_x, center_y)
+            cls.last_clicked_time = time.time()
+            time.sleep(click_interval + (random.random() / 1000)) #variance for bot detection
+        except pyautogui.FailSafeException:
+            print("Macro failed to click!")
 
     @classmethod
     def press_key(cls, key):
-        cls.pyn_keyboard.press(key)
-        time.sleep(key_press_delay)
-        cls.pyn_keyboard.release(key)
-        time.sleep(key_press_interval)
+        try:
+            cls.pyn_keyboard.press(key)
+            time.sleep(key_press_delay)
+            cls.pyn_keyboard.release(key)
+            time.sleep(key_press_interval)
+        except Exception as err:
+            print("Could not press key!!: ", err)
+    
+    @classmethod
+    def safety_return_checks(cls):
+        if isinstance(cls.current_macro_state, Macro.ExitMode): #checks while in loops
+            return cls.current_macro_state
+        elif isinstance(cls.current_macro_state, Macro.PausedMode):
+            return cls.current_macro_state
+        return None
     
     class MacroState:
         def execute(self):
@@ -83,6 +95,10 @@ class Macro:
     class SearchingMode(MacroState):
         def execute(self):
             while time.time() - Macro.last_clicked_time < alarm_time:
+                check = Macro.safety_return_checks()
+                if check:
+                    return check
+
                 if detect_exclamation(contour_area_threshold) and time.time() - Macro.last_clicked_time >= exclamation_wait_time: #sometimes exclamation lingers
                     return Macro.FishingMode()
 
@@ -92,6 +108,10 @@ class Macro:
         def execute(self):
             fishing_timer = time.time()
             while time.time() - fishing_timer < fishing_wait_time:
+                check = Macro.safety_return_checks()
+                if check:
+                    return check
+                
                 if found_text_in_image():
                     return Macro.EvaluatingMode()
                 
@@ -106,7 +126,7 @@ class Macro:
             
             Macro.press_key(rod_equip_keybind)
             Macro.press_key(rod_equip_keybind)
-
+            
             return Macro.EvaluatingMode()
 
     class EatingMode(MacroState):
@@ -120,27 +140,34 @@ class Macro:
 
     class PausedMode(MacroState):
         def execute(self):
-            pass #do nothing when paused
+            print("Macro is paused.")
+            time.sleep(0.1)
+            return self
 
     class ExitMode(MacroState):
         def execute(self):
             return None
 
-    def listen_for_input(self):
-        with Listener(on_press=self.on_press) as listener:
-            listener.join()
-
     def run_macro(self):
         print("Starting macro...")
         
-        self.current_macro_state = self.EvaluatingMode()
-
-        listener_thread = threading.Thread(target=self.listen_for_input)
-        listener_thread.daemon = True
-        listener_thread.start()
+        self.current_macro_state = self.PausedMode()
 
         while self.current_macro_state is not None:
-            self.current_macro_state = self.current_macro_state.execute()
+            self.key_checks()
+
+            macro_state = self.current_macro_state.execute()
+            check = self.safety_return_checks()
+            print("before: ", macro_state)
+            print("current: ", self.current_macro_state)
+            print("check: ", check)
+            if check:
+                if isinstance(check, Macro.ExitMode):
+                    self.current_macro_state = None
+                else:
+                    self.current_macro_state = check
+            else:
+                self.current_macro_state = macro_state
         
         cv2.destroyAllWindows()
         print("Macro ended successfully.")
