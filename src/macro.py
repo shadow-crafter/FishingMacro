@@ -1,4 +1,10 @@
-
+from pynput.keyboard import Listener
+import random
+from src.processing import *
+from src.settings import *
+from src.util import play_alarm_sound
+import threading
+import time
 
 """
 States:
@@ -17,33 +23,69 @@ States:
 
 """
 
+class Macro:
+    sound_file_path = "sounds/alert.mp3"
 
-class MacroState:
-    def execute(self):
-        raise NotImplementedError("This method is ment to be overridden!")
+    center_x, center_y = (-1, -1) #used for mouse click location
+    current_macro_state = None
 
-class EvaluatingMode(MacroState):
-    def execute(self):
-        pass
+    def on_press(self, key):
+        try:
+            if key.char == pause_keybind:
+                if self.current_macro_state != self.PausedMode:
+                    current_macro_state = self.PausedMode()
+                    print("Macro has been paused.")
+                else:
+                    current_macro_state = self.StuckMode() #automatically assume stuck, so restart
+                    print("Macro has been unpaused.")
+            if key.char == stop_keybind:
+                print("Stopping macro...")
+                current_macro_state = self.ExitMode()
+        except AttributeError:
+            pass #do nothing, only catches exception if it's a special key like f1 or shift
 
-class SearchingMode(MacroState):
-    def execute(self):
-        pass
+    class MacroState:
+        def execute(self):
+            raise NotImplementedError("This method is ment to be overridden!")
 
-class FishingMode(MacroState):
-    def execute(self):
-        pass
+    class EvaluatingMode(MacroState):
+        def execute(self):
+            pass
 
-class StuckMode(MacroState):
-    def execute(self):
-        pass
+    class SearchingMode(MacroState):
+        def execute(self):
+            pass
 
-class EatingMode(MacroState):
-    def execute(self):
-        pass
+    class FishingMode(MacroState):
+        def execute(self):
+            pass
 
-def run_macro():
-    current_macro_state = EvaluatingMode()
+    class StuckMode(MacroState):
+        def execute(self):
+            pass
 
-    while current_macro_state is not None:
-        current_macro_state = current_macro_state.execute()
+    class EatingMode(MacroState):
+        def execute(self):
+            pass
+
+    class PausedMode(MacroState):
+        def execute(self):
+            pass
+
+    class ExitMode(MacroState):
+        def execute(self):
+            return None
+
+    def listen_for_input(self):
+        with Listener(on_press=self.on_press) as listener:
+            listener.join()
+
+    def run_macro(self):
+        self.current_macro_state = self.EvaluatingMode()
+
+        listener_thread = threading.Thread(target=self.listen_for_input)
+        listener_thread.daemon = True
+        listener_thread.start()
+
+        while self.current_macro_state is not None:
+            self.current_macro_state = self.current_macro_state.execute()
