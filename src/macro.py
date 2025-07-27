@@ -43,14 +43,14 @@ class Macro:
         try:
             if key.char == pause_keybind:
                 if self.current_macro_state != self.PausedMode:
-                    current_macro_state = self.PausedMode()
+                    self.current_macro_state = self.PausedMode()
                     print("Macro has been paused.")
                 else:
-                    current_macro_state = self.StuckMode() #automatically assume stuck, so restart
+                    self.current_macro_state = self.StuckMode() #automatically assume stuck, so restart
                     print("Macro has been unpaused.")
             if key.char == stop_keybind:
                 print("Stopping macro...")
-                current_macro_state = self.ExitMode()
+                self.current_macro_state = self.ExitMode()
         except AttributeError:
             pass #do nothing, only catches exception if it's a special key like f1 or shift
     
@@ -131,6 +131,8 @@ class Macro:
             listener.join()
 
     def run_macro(self):
+        print("Starting macro...")
+        
         self.current_macro_state = self.EvaluatingMode()
 
         listener_thread = threading.Thread(target=self.listen_for_input)
