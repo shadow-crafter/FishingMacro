@@ -11,7 +11,6 @@ The program also has a timer for automatic eating to make the process easier.
 ## Installation
 
 ### From Source Code
-Installing the program is straightforward.
 
 - Firstly, <b>make sure that you have</b> [Python](https://www.python.org/downloads/) and Pip installed and working.
 
