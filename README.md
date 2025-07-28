@@ -29,7 +29,7 @@ After following these steps, you should be able to run the program by running `p
 
 If you would like an .exe file you can use to run the program, follow these steps:
 - Run the command `pip install pyinstaller`
-- Run the command `python -m pyinstaller --onefile main.py`
+- Run the command `pyinstaller --onefile main.py`
 
 ### From Release
 
