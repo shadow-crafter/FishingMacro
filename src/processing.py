@@ -85,7 +85,6 @@ def detect_exclamation(contour_check_area: int) -> bool:
         found = False
         for contour in contours:
             area = cv2.contourArea(contour)
-            print(area)
             if area > contour_check_area:
                 x, y, w, h = cv2.boundingRect(contour)
 
@@ -119,7 +118,7 @@ def found_text_in_image() -> bool:
         extracted_text = tess.image_to_string(screenshot)
         extracted_text = extracted_text.lower()
         extracted_text = re.sub(r'[^a-zA-Z0-9]', ' ', extracted_text) # remove special characters that sometimes artifact
-        print(f"Extracted text: {extracted_text.strip()}")
+        #print(f"Extracted text: {extracted_text.strip()}")
 
         for text_check in text_checks:
             if text_check.lower() in extracted_text:

@@ -1,6 +1,7 @@
 import keyboard
 from pynput.keyboard import Controller, Listener
 import random
+from src.cli import CLI
 from src.processing import *
 from src.settings import *
 from src.util import play_alarm_sound
@@ -35,22 +36,26 @@ click_interval = 0.01
 class Macro:
     current_macro_state = None
     pyn_keyboard = Controller()
-    
+    cli = CLI
+
     last_clicked_time = time.time()
     eatting_timer = time.time()
+
+    def __init__(self):
+        self.cli = CLI(self)
 
     @classmethod
     def key_checks(cls):
         if keyboard.is_pressed(pause_keybind):
             if not isinstance(cls.current_macro_state, cls.PausedMode):
                 cls.current_macro_state = cls.PausedMode()
-                print("Macro has been paused.")
+                cls.cli.extra_info.append("Macro has been paused.")
             else:
                 cls.current_macro_state = cls.StuckMode()
             time.sleep(0.2) #db
             return cls.current_macro_state
         elif keyboard.is_pressed(stop_keybind):
-            print("Stopping macro...")
+            cls.cli.extra_info.append("Stopping macro...")
             cls.current_macro_state = cls.ExitMode()
             time.sleep(0.2) #db
             return cls.current_macro_state
@@ -62,7 +67,7 @@ class Macro:
             cls.last_clicked_time = time.time()
             time.sleep(click_interval + (random.random() / 1000)) #variance for bot detection
         except pyautogui.FailSafeException:
-            print("Macro failed to click!")
+            cls.cli.extra_info.append("Macro failed to click!")
 
     @classmethod
     def press_key(cls, key):
@@ -72,7 +77,7 @@ class Macro:
             cls.pyn_keyboard.release(key)
             time.sleep(key_press_interval)
         except Exception as err:
-            print("Could not press key!!: ", err)
+            cls.cli.extra_info.append("Could not press key!!: " + str(err))
     
     @classmethod
     def safety_return_checks(cls):
@@ -83,10 +88,12 @@ class Macro:
         return None
     
     class MacroState:
+        state_info = "should be overridden"
         def execute(self):
             raise NotImplementedError("This method is ment to be overridden!")
 
     class EvaluatingMode(MacroState):
+        state_info = "evaluating..."
         def execute(self):
             if time.time() - Macro.eatting_timer >= eat_time:
                 return Macro.EatingMode()
@@ -96,6 +103,7 @@ class Macro:
                 return Macro.SearchingMode()
 
     class SearchingMode(MacroState):
+        state_info = "searching for exclamation point..."
         def execute(self):
             while time.time() - Macro.last_clicked_time < alarm_time:
                 check = Macro.key_checks()
@@ -108,6 +116,7 @@ class Macro:
             return Macro.StuckMode()
 
     class FishingMode(MacroState):
+        state_info = "fishing!!"
         def execute(self):
             fishing_timer = time.time()
             while time.time() - fishing_timer < fishing_wait_time:
@@ -123,6 +132,7 @@ class Macro:
             return Macro.StuckMode()
 
     class StuckMode(MacroState):
+        state_info = "stuck, attempting to get unstuck..."
         def execute(self):
             if play_alarm:
                 play_alarm_sound(sound_file_path)
@@ -133,6 +143,7 @@ class Macro:
             return Macro.EvaluatingMode()
 
     class EatingMode(MacroState):
+        state_info = "eating!!"
         def execute(self):
             Macro.press_key(food_equip_keybind)
             Macro.click()
@@ -142,17 +153,19 @@ class Macro:
             return Macro.EvaluatingMode()
 
     class PausedMode(MacroState):
+        state_info = "paused..."
         def execute(self):
-            print("Macro is paused.")
+            Macro.cli.extra_info.append("Macro is paused.")
             time.sleep(0.1)
             return self
 
     class ExitMode(MacroState):
+        state_info = "exiting..."
         def execute(self):
             return None
 
     def run_macro(self):
-        print("Starting macro...")
+        self.cli.extra_info.append("Starting macro...")
         
         self.current_macro_state = self.EvaluatingMode()
 
@@ -172,4 +185,4 @@ class Macro:
                 self.current_macro_state = macro_state
         
         cv2.destroyAllWindows()
-        print("Macro ended successfully.")
+        self.cli.extra_info.append("Macro ended successfully.")
