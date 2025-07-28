@@ -39,7 +39,7 @@ class Macro:
     cli = CLI
 
     last_clicked_time = time.time()
-    eatting_timer = time.time()
+    eating_timer = time.time()
     fish_caught = 0
 
     def __init__(self):
@@ -63,6 +63,7 @@ class Macro:
     
     @classmethod
     def click(cls):
+        center_x, center_y = get_game_window_center(get_game_window())
         try:
             pyautogui.click(center_x, center_y)
             cls.last_clicked_time = time.time()
@@ -96,7 +97,7 @@ class Macro:
     class EvaluatingMode(MacroState):
         state_info = "evaluating..."
         def execute(self):
-            if time.time() - Macro.eatting_timer >= eat_time:
+            if time.time() - Macro.eating_timer >= eat_time:
                 return Macro.EatingMode()
             else:
                 time.sleep(0.3) #delay after caught
@@ -104,7 +105,7 @@ class Macro:
                 return Macro.SearchingMode()
 
     class SearchingMode(MacroState):
-        state_info = "searching for exclamation point..."
+        state_info = "searching for an exclamation point..."
         def execute(self):
             while time.time() - Macro.last_clicked_time < alarm_time:
                 check = Macro.key_checks()
@@ -153,6 +154,7 @@ class Macro:
             time.sleep(0.3) #give extra time for eating to process
             Macro.press_key(rod_equip_keybind)
 
+            Macro.eating_timer = time.time()
             return Macro.EvaluatingMode()
 
     class PausedMode(MacroState):

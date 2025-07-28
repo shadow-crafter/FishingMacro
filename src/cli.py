@@ -36,5 +36,6 @@ class CLI:
                 console.print(panel) 
                 for line in self.extra_info:
                     console.print(line)
+                self.extra_info.clear()
 
                 time.sleep(0.5)
