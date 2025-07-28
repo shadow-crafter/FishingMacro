@@ -26,7 +26,7 @@ class CLI:
 
                 title = Text("Fishing Macro", style="bold cyan")
                 panel = Panel(
-                    f"fish caught this session: 0 total fish caught: 0\n"
+                    f"fish caught this session: {self.macro.fish_caught} total fish caught: N/A\n"
                     f"The macro is currently {state_info}\n",
                     title=title,
                     border_style="bright_blue"

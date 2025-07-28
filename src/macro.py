@@ -40,6 +40,7 @@ class Macro:
 
     last_clicked_time = time.time()
     eatting_timer = time.time()
+    fish_caught = 0
 
     def __init__(self):
         self.cli = CLI(self)
@@ -125,6 +126,8 @@ class Macro:
                     return check
                 
                 if found_text_in_image():
+                    Macro.cli.extra_info.append("Caught a fish!")
+                    Macro.fish_caught += 1
                     return Macro.EvaluatingMode()
                 
                 Macro.click()
