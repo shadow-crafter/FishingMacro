@@ -12,7 +12,7 @@ debug_windows = bool(config.get("Settings", "debug_windows"))
 play_alarm = bool(config.get("Settings", "play_alarm"))
 
 alarm_time = int(config.get("Settings", "alarm_time"))
-eat_time = int(config.get("Settings", "eat_time"))
+eat_time = int(config.get("Settings", "eat_time")) * 60 #convert to minutes
 
 pause_keybind = config.get("Settings", "pause_keybind")
 stop_keybind = config.get("Settings", "stop_keybind")

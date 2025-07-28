@@ -39,18 +39,21 @@ class Macro:
     last_clicked_time = time.time()
     eatting_timer = time.time()
 
-    def key_checks(self):
+    @classmethod
+    def key_checks(cls):
         if keyboard.is_pressed(pause_keybind):
-            if not isinstance(self.current_macro_state, self.PausedMode):
-                self.current_macro_state = self.PausedMode()
+            if not isinstance(cls.current_macro_state, cls.PausedMode):
+                cls.current_macro_state = cls.PausedMode()
                 print("Macro has been paused.")
             else:
-                self.current_macro_state = self.StuckMode()
+                cls.current_macro_state = cls.StuckMode()
             time.sleep(0.2) #db
+            return cls.current_macro_state
         elif keyboard.is_pressed(stop_keybind):
             print("Stopping macro...")
-            self.current_macro_state = self.ExitMode()
+            cls.current_macro_state = cls.ExitMode()
             time.sleep(0.2) #db
+            return cls.current_macro_state
     
     @classmethod
     def click(cls):
@@ -95,7 +98,7 @@ class Macro:
     class SearchingMode(MacroState):
         def execute(self):
             while time.time() - Macro.last_clicked_time < alarm_time:
-                check = Macro.safety_return_checks()
+                check = Macro.key_checks()
                 if check:
                     return check
 
@@ -108,7 +111,7 @@ class Macro:
         def execute(self):
             fishing_timer = time.time()
             while time.time() - fishing_timer < fishing_wait_time:
-                check = Macro.safety_return_checks()
+                check = Macro.key_checks()
                 if check:
                     return check
                 
@@ -151,16 +154,15 @@ class Macro:
     def run_macro(self):
         print("Starting macro...")
         
-        self.current_macro_state = self.PausedMode()
+        self.current_macro_state = self.EvaluatingMode()
 
         while self.current_macro_state is not None:
-            self.key_checks()
 
             macro_state = self.current_macro_state.execute()
-            check = self.safety_return_checks()
-            print("before: ", macro_state)
-            print("current: ", self.current_macro_state)
-            print("check: ", check)
+            check = self.key_checks()
+            #print("before: ", macro_state)
+            #print("current: ", self.current_macro_state)
+            #print("check: ", check)
             if check:
                 if isinstance(check, Macro.ExitMode):
                     self.current_macro_state = None
