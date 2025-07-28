@@ -7,6 +7,7 @@ window_check_title = config.get("Settings", "window_title")
 ignore_list = config.get("Settings", "ignore_list").split(',')
 
 contour_area_threshold = int(config.get("Settings", "contour_area_threshold"))
+check_size = int(config.get("Settings", "check_area"))
 
 debug_windows = bool(config.get("Settings", "debug_windows"))
 play_alarm = bool(config.get("Settings", "play_alarm"))

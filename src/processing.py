@@ -4,7 +4,7 @@ import pyautogui
 import pygetwindow as gw
 import pytesseract as tess
 import re
-from src.settings import debug_windows, ignore_list, window_check_title
+from src.settings import debug_windows, ignore_list, window_check_title, check_size
 from src.util import ignore_list_check
 import time
 
@@ -69,7 +69,7 @@ def get_window_screenshot(check_length):
 
 def detect_exclamation(contour_check_area: int) -> bool:
     try:
-        screenshot = get_window_screenshot(500)
+        screenshot = get_window_screenshot(check_size)
         if screenshot is None:
             return False
         
