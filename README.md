@@ -12,7 +12,7 @@ The program also has a timer for automatic eating to make the process easier.
 
 ### From Source Code
 
-- Firstly, <b>make sure that you have</b> [Python](https://www.python.org/downloads/) and Pip installed and working.
+- Firstly, <b>make sure that you have</b> [Python](https://www.python.org/downloads/) and PIP installed and working.
 
 - Next, extract the project and place it somewhere <b>that makes sense to you.</b>
 
@@ -32,7 +32,17 @@ If you would like an .exe file you can use to run the program, follow these step
 
 ### From Release
 
-TBA
+Release is now available! This allows you to run the program without needing Python and PIP installed, making the process much simpler.
+
+To download & run the program from releases, open the [releases section for this project](https://github.com/shadow-crafter/FishingMacro/releases), and download the release zip.
+
+Extract the files, and place the folder somewhere that makes sense to you. Then to run the program, just run the <b>main.exe</b> file!
+
+Configuration and setup should work exactly the same, just modify the <i>config.ini</i> file within the folder.
+
+### Updates
+
+Keep in mind that this program does not auto-update. Make sure to check occasionally for new releases.
 
 ## Usage
 
@@ -41,7 +51,7 @@ To use the program, open Arcane Odyssey on Roblox and start the program.
 
 It is reccomended to calibrate it first to make sure it works well on your device.
 
-To do this, head into the <i>config.ini</i> file in this project, and change `debug_windows` to <b>true</b>. This will create popups when the program takes screenshots, allowing you to adjust paramaters accordingly. It is reccomended to test this with the game window in a windowed state to make it easier to compare (since the program auto focuses the game window).
+To do this, head into the <i>config.ini</i> file in the project, and change `debug_windows` to <b>true</b>. This will create popups when the program takes screenshots, allowing you to adjust paramaters accordingly. It is reccomended to test this with the game window in a windowed state to make it easier to compare (since the program auto focuses the game window).
 
 The paramater `contour_area_threshold` is the minimum number of red pixles the program must detect in a contour to begin fishing. If the program is too sensitive on your device, lower this value--if it isn't sensitive enough, increase it.
 
