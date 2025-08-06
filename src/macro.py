@@ -63,13 +63,13 @@ class Macro:
     
     @classmethod
     def click(cls):
-        center_x, center_y = get_game_window_center(get_game_window())
         try:
+            center_x, center_y = get_game_window_center(get_game_window())
             pyautogui.click(center_x, center_y)
             cls.last_clicked_time = time.time()
             time.sleep(click_interval + (random.random() / 1000)) #variance for bot detection
-        except pyautogui.FailSafeException:
-            cls.cli.extra_info.append("Macro failed to click!")
+        except Exception as err:
+            cls.cli.extra_info.append("Macro failed to click!: " + str(err))
 
     @classmethod
     def press_key(cls, key):
