@@ -1,8 +1,10 @@
+import threading
+import time
+
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
-import threading
-import time
+
 
 class CLI:
     macro = None
@@ -29,11 +31,11 @@ class CLI:
                     f"fish caught this session: {self.macro.fish_caught} total fish caught: N/A\n"
                     f"The macro is currently {state_info}\n",
                     title=title,
-                    border_style="bright_blue"
+                    border_style="bright_blue",
                 )
 
                 console.clear()
-                console.print(panel) 
+                console.print(panel)
                 for line in self.extra_info:
                     console.print(line)
                 self.extra_info.clear()
