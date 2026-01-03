@@ -14,8 +14,10 @@ play_alarm = bool(config.get("Settings", "play_alarm"))
 
 alarm_time = int(config.get("Settings", "alarm_time"))
 eat_time = int(config.get("Settings", "eat_time")) * 60  # convert to minutes
+bait_time = int(config.get("Settings", "bait_time"))
 
 pause_keybind = config.get("Settings", "pause_keybind")
 stop_keybind = config.get("Settings", "stop_keybind")
 rod_equip_keybind = config.get("Settings", "rod_equip_keybind")
 food_equip_keybind = config.get("Settings", "food_equip_keybind")
+bait_equip_keybind = config.get("Settings", "bait_equip_keybind")

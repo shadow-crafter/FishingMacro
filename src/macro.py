@@ -1,9 +1,8 @@
 import random
-import threading
 import time
 
 import keyboard
-from pynput.keyboard import Controller, Listener
+from pynput.keyboard import Controller
 
 from src.cli import CLI
 from src.processing import *
@@ -15,6 +14,7 @@ States:
 
 1-Evaluating mode. Decides if enough time has passed for player to eat.
     ->if it is time to eat, enter 5.
+    -> if it is time to send out bait, enter 8.
     ->if it is not time to eat, casts rod and enters 2.
 2-Searching mode. Looking for exclamation point
     -> if detected, enter 3
@@ -26,6 +26,7 @@ States:
 5-Eating mode. makes the player eat based on pre-defined button, then returns to 1.
 6-Paused mode. Must be exited manually.
 7.Exit mode. Ends macro.
+8-Bait mode. Send out a bait, then returns to 1.
 """
 
 sound_file_path = "sounds/alert.mp3"
@@ -43,6 +44,7 @@ class Macro:
 
     last_clicked_time = time.time()
     eating_timer = time.time()
+    bait_timer =time.time()
     fish_caught = 0
 
     def __init__(self):
@@ -106,6 +108,8 @@ class Macro:
         def execute(self):
             if time.time() - Macro.eating_timer >= eat_time:
                 return Macro.EatingMode()
+            elif time.time() - Macro.bait_timer >= bait_time:
+                return Macro.BaitMode()
             else:
                 time.sleep(0.3)  # delay after caught
                 Macro.click()
@@ -169,6 +173,18 @@ class Macro:
             Macro.press_key(rod_equip_keybind)
 
             Macro.eating_timer = time.time()
+            return Macro.EvaluatingMode()
+
+    class BaitMode(MacroState):
+        state_info = "sending out bait..."
+
+        def execute(self):
+            Macro.press_key(bait_equip_keybind)
+            Macro.click()
+            time.sleep(1) #give time to send out bait, it takes a moment
+            Macro.press_key(bait_equip_keybind)
+
+            Macro.bait_timer = time.time()
             return Macro.EvaluatingMode()
 
     class PausedMode(MacroState):
